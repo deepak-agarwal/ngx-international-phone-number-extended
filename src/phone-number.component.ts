@@ -56,6 +56,7 @@ export class PhoneNumberComponent
     @Input() type = 'text';
     @Input() onlyNumber = true;
     @Input() allowedCountries: Country[];
+    @Input() preferredCountries: Country[];
 
     @Output() onCountryCodeChanged: EventEmitter<any> = new EventEmitter();
 
@@ -105,10 +106,17 @@ export class PhoneNumberComponent
     ngOnInit(): void {
         if (this.allowedCountries && this.allowedCountries.length) {
             this.countries = this.countryService.getCountriesByISO(this.allowedCountries);
-        } else {
-            this.countries = this.countryService.getCountries();
         }
-        this.orderCountriesByName();
+        else if (this.preferredCountries && this.preferredCountries.length) { 
+            const preferred = this.countryService.getCountriesByISO(this.preferredCountries);
+            const allCountries = this.countryService.getCountries();
+            const remainingCountries = allCountries.filter(country => !preferred.some(prefCountry => prefCountry.name === country.name));
+            this.countries = [...preferred, ...remainingCountries];
+        }
+        else {
+            this.countries = this.countryService.getCountries();
+            this.orderCountriesByName();
+        }
     }
 
     /**
@@ -285,20 +293,19 @@ export class PhoneNumberComponent
         )
             ? this.selectedCountry
                 ? `${this.phoneNumber
-                .split(PLUS)[1]
-                .substr(
-                    this.selectedCountry.dialCode.length,
-                    this.phoneNumber.length
-                )}`
+                    .split(PLUS)[1]
+                    .substr(
+                        this.selectedCountry.dialCode.length,
+                        this.phoneNumber.length
+                    )}`
                 : ''
-                    : this.phoneNumber;
+            : this.phoneNumber;
 
         this.selectedCountry = this.countries.find(
             (country: Country) => country.countryCode === countryCode
         );
         if (this.selectedCountry) {
-            this.phoneNumber = `${PLUS}${
-                this.selectedCountry.dialCode
+            this.phoneNumber = `${PLUS}${this.selectedCountry.dialCode
                 } ${newInputValue.replace(/ /g, '')}`;
         } else {
             this.phoneNumber = `${newInputValue.replace(/ /g, '')}`;
