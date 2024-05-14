@@ -111,6 +111,8 @@ export class PhoneNumberComponent
             const preferred = this.countryService.getCountriesByISO(this.preferredCountries);
             const allCountries = this.countryService.getCountries();
             const remainingCountries = allCountries.filter(country => !preferred.some(prefCountry => prefCountry.name === country.name));
+            this.countries = remainingCountries
+            this.orderCountriesByName();
             this.countries = [...preferred, ...remainingCountries];
         }
         else {
